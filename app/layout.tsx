@@ -5,6 +5,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/lib/auth-provider"
 import { Toaster } from "@/components/ui/toaster"
+import { Analytics } from "@vercel/analytics/react";
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -21,8 +22,7 @@ export const metadata: Metadata = {
     width: "device-width",
     initialScale: 1,
     maximumScale: 1,
-  },
-    generator: 'v0.dev'
+  }
 }
 
 export default function RootLayout({
@@ -36,6 +36,7 @@ export default function RootLayout({
         <AuthProvider>
           <ThemeProvider attribute="class" defaultTheme="light">
             {children}
+            <Analytics />
             <Toaster />
           </ThemeProvider>
         </AuthProvider>
