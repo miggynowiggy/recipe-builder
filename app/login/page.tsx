@@ -1,33 +1,50 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth-provider"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/lib/auth-provider";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function LoginPage() {
-  const { user, signInWithGoogle, loading } = useAuth()
-  const router = useRouter()
+  const { user, signInWithGoogle, loading } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo") || "/";
 
   useEffect(() => {
     if (user && !loading) {
-      router.push("/")
+      // Redirect to the original requested URL or home page
+      router.push(redirectTo);
     }
-  }, [user, loading, router])
+  }, [user, loading, router, redirectTo]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Welcome to Recipe Finder</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Welcome to Recipe Finder
+          </CardTitle>
           <CardDescription className="text-center">
-            Sign in to save your favorite recipes and get personalized recommendations
+            Sign in to save your favorite recipes and get personalized
+            recommendations
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid grid-cols-1 gap-6">
-            <Button onClick={signInWithGoogle} className="w-full" disabled={loading}>
+            <Button
+              onClick={signInWithGoogle}
+              className="w-full"
+              disabled={loading}
+            >
               <svg
                 className="mr-2 h-4 w-4"
                 aria-hidden="true"
@@ -54,5 +71,5 @@ export default function LoginPage() {
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }

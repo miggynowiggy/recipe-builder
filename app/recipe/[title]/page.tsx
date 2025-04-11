@@ -129,7 +129,11 @@ ${recipe.steps.map((step, index) => `${index + 1}. ${step}`).join("\n")}
                   </Badge>
                 )}
               </div>
-              <Button variant={isBookmarked ? "default" : "outline"} className="mt-4 md:mt-0" onClick={handleBookmark}>
+              <Button
+                variant={isBookmarked ? "default" : "outline"}
+                className="mt-4 md:mt-0"
+                onClick={handleBookmark}
+              >
                 {isBookmarked ? (
                   <>
                     <BookmarkCheck className="mr-2 h-4 w-4" />
@@ -161,62 +165,45 @@ ${recipe.steps.map((step, index) => `${index + 1}. ${step}`).join("\n")}
               </div>
             )}
 
-            {recipe.imageUrl && (
+            {recipe.imageURL && (
               <div className="mb-6">
                 <img
-                  src={recipe.imageUrl || "/placeholder.svg"}
+                  src={recipe.imageURL || "/placeholder.svg"}
                   alt={recipe.title}
                   className="w-full h-64 object-cover rounded-lg"
                 />
               </div>
             )}
 
-            <Tabs
-              defaultValue="markdown"
-              onValueChange={(value) => setViewMode(value as "structured" | "markdown")}
-              className="mb-6"
-            >
-              <TabsList>
-                <TabsTrigger value="markdown">Markdown View</TabsTrigger>
-                <TabsTrigger value="structured">Structured View</TabsTrigger>
-              </TabsList>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="md:col-span-1">
+                <h2 className="text-xl font-semibold mb-4">Ingredients</h2>
+                <ul className="space-y-2">
+                  {recipe.ingredients.map((ingredient, index) => (
+                    <li key={index} className="flex items-start">
+                      <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs mr-2 mt-0.5">
+                        {index + 1}
+                      </div>
+                      <span>{ingredient}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-              <TabsContent value="markdown" className="mt-4">
-                <MarkdownRenderer content={markdownContent} />
-              </TabsContent>
-
-              <TabsContent value="structured" className="mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <div className="md:col-span-1">
-                    <h2 className="text-xl font-semibold mb-4">Ingredients</h2>
-                    <ul className="space-y-2">
-                      {recipe.ingredients.map((ingredient, index) => (
-                        <li key={index} className="flex items-start">
-                          <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs mr-2 mt-0.5">
-                            {index + 1}
-                          </div>
-                          <span>{ingredient}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <h2 className="text-xl font-semibold mb-4">Instructions</h2>
-                    <ol className="space-y-6">
-                      {recipe.steps.map((step, index) => (
-                        <li key={index} className="flex">
-                          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium mr-4 mt-0.5 flex-shrink-0">
-                            {index + 1}
-                          </div>
-                          <p>{step}</p>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
+              <div className="md:col-span-2">
+                <h2 className="text-xl font-semibold mb-4">Instructions</h2>
+                <ol className="space-y-6">
+                  {recipe.steps.map((step, index) => (
+                    <li key={index} className="flex">
+                      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium mr-4 mt-0.5 flex-shrink-0">
+                        {index + 1}
+                      </div>
+                      <p>{step}</p>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-12">
@@ -225,13 +212,17 @@ ${recipe.steps.map((step, index) => `${index + 1}. ${step}`).join("\n")}
             ) : (
               <>
                 <h2 className="text-xl font-semibold mb-2">Recipe Not Found</h2>
-                <p className="text-muted-foreground mb-4">We couldn't find the recipe you're looking for.</p>
-                <Button onClick={() => router.push("/search")}>Search for Recipes</Button>
+                <p className="text-muted-foreground mb-4">
+                  We couldn't find the recipe you're looking for.
+                </p>
+                <Button onClick={() => router.push("/search")}>
+                  Search for Recipes
+                </Button>
               </>
             )}
           </div>
         )}
       </main>
     </div>
-  )
+  );
 }

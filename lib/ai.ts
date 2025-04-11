@@ -41,15 +41,6 @@ export async function getRecipesFromIngredients(ingredients: string[], courseTyp
       - prepTime: string
       - cookTime: string
       - courseType: string (e.g., "appetizer", "main course", "salad", "dessert", "drink")
-      - markdownContent: string (a complete markdown representation of the recipe with ## headings, lists, etc.)
-      
-      For the markdownContent field, create a well-formatted markdown document for each recipe that includes:
-      - # Recipe Title
-      - [alt description of the coverPhoto](imageURL)
-      - ## Course Type
-      - ## Ingredients (with bullet points)
-      - ## Instructions (with numbered steps)
-      - ## Time (prep and cook times)
     `
 
     // Get the generative model
@@ -62,16 +53,22 @@ export async function getRecipesFromIngredients(ingredients: string[], courseTyp
         temperature: 0.4,
         topP: 0.8,
         topK: 40,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 8000,
       },
     })
 
-    const responseText = result.response.text()
-
     // Try to parse the response as JSON
+    const responseText = result.response
+      .text()
+      .replaceAll("```", "")
+      .replaceAll("json", "");
+
+    console.log(responseText)
+
     try {
-      const trimmedOutput = responseText.replace('```json', '').replace('```', '')
-      const recipes = JSON.parse(trimmedOutput) as Recipe[]
+      const recipes = JSON.parse(responseText) as Recipe[]
+
+      console.log(responseText, recipes)
 
       // Ensure all recipes have the courseType field
       const processedRecipes = recipes.map((recipe) => {
@@ -94,7 +91,7 @@ export async function getRecipesFromIngredients(ingredients: string[], courseTyp
 }
 
 // Function to get recipe suggestions from multiple images
-export async function getRecipesFromImages(imageUrls: string[], courseType: CourseType = "any") {
+export async function getRecipesFromImages(uploadedFiles: File[], courseType: CourseType = "any") {
   try {
     // Create the prompt for Gemini
     const courseTypeText =
@@ -102,10 +99,10 @@ export async function getRecipesFromImages(imageUrls: string[], courseType: Cour
 
     const prompt = `
       I'm sending you ${
-        imageUrls.length > 1 ? "multiple images" : "an image"
+        uploadedFiles.length > 1 ? "multiple images" : "an image"
       } of food ingredients. 
       Please identify all the ingredients visible in ${
-        imageUrls.length > 1 ? "these images" : "this image"
+        uploadedFiles.length > 1 ? "these images" : "this image"
       } and suggest 5 recipes I can make with these ingredients.
       ${courseTypeText}
       
@@ -124,15 +121,6 @@ export async function getRecipesFromImages(imageUrls: string[], courseType: Cour
       - prepTime: string
       - cookTime: string
       - courseType: string (e.g., "appetizer", "main course", "salad", "dessert", "drink")
-      - markdownContent: string (a complete markdown representation of the recipe with ## headings, lists, etc.)
-      
-      For the markdownContent field, create a well-formatted markdown document for each recipe that includes:
-      - # Recipe Title
-      - [alt description of the coverPhoto](imageURL)
-      - ## Course Type
-      - ## Ingredients (with bullet points)
-      - ## Instructions (with numbered steps)
-      - ## Time (prep and cook times)
     `;
 
     // Get the generative model
@@ -142,14 +130,12 @@ export async function getRecipesFromImages(imageUrls: string[], courseType: Cour
     const parts: any[] = [{ text: prompt }]
 
     // Fetch all images and convert to base64
-    for (const imageUrl of imageUrls) {
-      const imageResponse = await fetch(imageUrl)
-      const imageBlob = await imageResponse.blob()
-      const base64Image = await blobToBase64(imageBlob)
+    for (const uploadedFile of uploadedFiles) {
+      const base64Image = await blobToBase64(uploadedFile)
 
       parts.push({
         inlineData: {
-          mimeType: imageBlob.type,
+          mimeType: uploadedFile.type,
           data: base64Image.split(",")[1], // Remove the data:image/jpeg;base64, part
         },
       })
@@ -167,15 +153,19 @@ export async function getRecipesFromImages(imageUrls: string[], courseType: Cour
         temperature: 0.4,
         topP: 0.8,
         topK: 40,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 8000,
       },
     })
 
-    const responseText = result.response.text()
+    const responseText = result.response
+      .text()
+      .replaceAll("```", "")
+      .replaceAll("json", "");
 
     // Try to parse the response as JSON
     try {
-      const recipes = JSON.parse(responseText) as Recipe[]
+      const jsonResponse = JSON.parse(responseText) as { recipes: Recipe[] };
+      const recipes = jsonResponse.recipes;
 
       // Ensure all recipes have the courseType field
       const processedRecipes = recipes.map((recipe) => {
@@ -198,12 +188,12 @@ export async function getRecipesFromImages(imageUrls: string[], courseType: Cour
 }
 
 // Helper function to convert Blob to base64
-function blobToBase64(blob: Blob): Promise<string> {
+function blobToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onloadend = () => resolve(reader.result as string)
     reader.onerror = reject
-    reader.readAsDataURL(blob)
+    reader.readAsDataURL(file)
   })
 }
 

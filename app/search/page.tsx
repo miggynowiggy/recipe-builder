@@ -9,7 +9,7 @@ import { Navbar } from "@/components/navbar"
 import { ImageUpload } from "@/components/ui/image-upload"
 import { IngredientInput } from "@/components/ingredient-input"
 import { RecipeCard } from "@/components/recipe-card"
-import { type Recipe, uploadImage, saveRecipe, isRecipeBookmarked } from "@/lib/db"
+import { type Recipe, uploadImage, saveRecipe, isRecipeBookmarked, isFreeTierExceeded, updateFreeTierCounter } from "@/lib/db"
 import { getRecipesFromIngredients, getRecipesFromImages } from "@/lib/ai"
 import { Loader2, Camera, List, Filter } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -44,17 +44,37 @@ export default function SearchPage() {
         title: "No ingredients added",
         description: "Please add at least one ingredient to search for recipes.",
         variant: "destructive",
-      })
+      });
       return
     }
 
     if (mode === "photo" && selectedFiles.length === 0) {
+      console.log("invalid")
       toast({
         title: "No images selected",
         description: "Please take photos or upload images of your ingredients.",
         variant: "destructive",
-      })
+      });
       return
+    }
+
+    if (!user) {
+      toast({
+        title: "Ohh this is awkward...",
+        description: "Please sign in through this app before using.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const isTierExceeded = await isFreeTierExceeded(user.uid);
+    if (isTierExceeded) {
+      toast({
+        title: "Sorry...",
+        description: "You have exceeded today's maximum search. Please try again tomorrow",
+        variant: "destructive"
+      });
+      return;
     }
 
     setLoading(true)
@@ -63,21 +83,13 @@ export default function SearchPage() {
     try {
       let results: Recipe[] = []
 
-      if (mode === "text") {
+      if (mode === "text" && user) {
         results = await getRecipesFromIngredients(ingredients, courseType)
+        await updateFreeTierCounter(user.uid);
       } else if (mode === "photo" && selectedFiles.length > 0 && user) {
-        // Upload all images to Firebase Storage
-        const imageUrls: string[] = []
-
-        for (const file of selectedFiles) {
-          const imageUrl = await uploadImage(user.uid, file)
-          if (imageUrl) {
-            imageUrls.push(imageUrl)
-          }
-        }
-
-        if (imageUrls.length > 0) {
-          results = await getRecipesFromImages(imageUrls, courseType)
+        if (selectedFiles.length > 0) {
+          results = await getRecipesFromImages(selectedFiles, courseType)
+          await updateFreeTierCounter(user.uid);
         } else {
           throw new Error("Failed to upload images")
         }
