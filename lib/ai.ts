@@ -63,8 +63,6 @@ export async function getRecipesFromIngredients(ingredients: string[], courseTyp
       .replaceAll("```", "")
       .replaceAll("json", "");
 
-    console.log(responseText)
-
     try {
       const recipes = JSON.parse(responseText) as Recipe[]
 
